@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Seguimiento VO4 — Mesas de sufragio</title>
+<style>
+:root{--bg:#f3f5fa;--card:#fff;--text:#0f172a;--muted:#64748b;--border:#e2e8f0;--accent:#2563eb;--ok:#16a34a;--warn:#f59e0b;--err:#dc2626;--risk:#7c3aed;--sh:0 1px 2px rgba(15,23,42,.05),0 2px 8px rgba(15,23,42,.06);box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0b1120;--card:#141c2e;--text:#e6ebf5;--muted:#8b9bb4;--border:#243049;--accent:#60a5fa;--ok:#4ade80;--warn:#fbbf24;--err:#f87171;--risk:#a78bfa;--sh:0 1px 2px rgba(0,0,0,.4)}}
+:root[data-theme="dark"]{--bg:#0b1120;--card:#141c2e;--text:#e6ebf5;--muted:#8b9bb4;--border:#243049;--accent:#60a5fa;--ok:#4ade80;--warn:#fbbf24;--err:#f87171;--risk:#a78bfa;--sh:0 1px 2px rgba(0,0,0,.4)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--bg);z-index:40}
+body.bulk{padding-bottom:90px}
+.wrap{max-width:1440px;margin:0 auto;padding:0 18px}
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:30;background:var(--bg);border-bottom:1px solid var(--border)}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:12px}
+.logo{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-size:21px;background:linear-gradient(135deg,#2563eb,#7c3aed);box-shadow:0 4px 14px rgba(79,70,229,.35)}
+h1{font-size:1.05rem;margin:0}.brand p{margin:0;font-size:.76rem;color:var(--muted)}
+.acts{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.btn{font:inherit;font-size:.8rem;font-weight:650;padding:8px 13px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);cursor:pointer;white-space:nowrap}
+.btn:hover{border-color:var(--accent);color:var(--accent)}
+.btn.p{background:var(--accent);border-color:var(--accent);color:#fff}.btn.p:hover{color:#fff;filter:brightness(1.1)}
+.btn.r{background:var(--risk);border-color:var(--risk);color:#fff}.btn.r:hover{color:#fff;filter:brightness(1.1)}
+.sync{display:flex;align-items:center;gap:7px;font-size:.76rem;color:var(--muted);padding:0 0 9px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--ok)}
+main{padding:16px 0 50px}
+.alert{display:flex;gap:12px;align-items:center;padding:12px 16px;border-radius:14px;margin-bottom:14px;background:linear-gradient(100deg,color-mix(in srgb,var(--risk) 16%,var(--card)),var(--card));border:1px solid color-mix(in srgb,var(--risk) 35%,var(--border));font-size:.84rem}
+.alert b{color:var(--risk)}.alert .ic{font-size:1.5rem}
+.kpis{display:grid;grid-template-columns:1.3fr repeat(5,1fr);gap:10px;margin-bottom:14px}
+.kpi{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:13px 15px;box-shadow:var(--sh)}
+.kpi .l{font-size:.68rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.kpi .v{font-size:1.65rem;font-weight:800;line-height:1.15;margin-top:3px}.kpi .s{font-size:.72rem;color:var(--muted)}
+.kpi.hero{display:flex;align-items:center;gap:14px}
+.ring{--p:0;width:74px;height:74px;border-radius:50%;flex:none;display:grid;place-items:center;background:conic-gradient(var(--ok) calc(var(--p)*1%),var(--border) 0)}
+.ring span{width:56px;height:56px;border-radius:50%;background:var(--card);display:grid;place-items:center;font-weight:800;font-size:.95rem}
+.c-ok{color:var(--ok)}.c-warn{color:var(--warn)}.c-err{color:var(--err)}.c-risk{color:var(--risk)}.c-acc{color:var(--accent)}
+.sec{display:flex;align-items:center;justify-content:space-between;margin:4px 0 8px}
+.sec h2{font-size:.82rem;margin:0;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.leg{display:flex;gap:12px;font-size:.72rem;color:var(--muted)}.leg i{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:4px}
+.locs{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px;margin-bottom:16px}
+.loc{background:var(--card);border:1px solid var(--border);border-radius:13px;padding:11px 13px;cursor:pointer;box-shadow:var(--sh);transition:.15s}
+.loc:hover{transform:translateY(-2px);border-color:var(--accent)}
+.loc.on{border-color:var(--accent);box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 30%,transparent)}
+.loc .n{font-weight:700;font-size:.84rem;display:flex;justify-content:space-between;gap:6px}
+.loc .n em{font-style:normal;font-size:.62rem;font-weight:800;color:var(--risk);background:color-mix(in srgb,var(--risk) 15%,transparent);padding:2px 7px;border-radius:99px;white-space:nowrap;align-self:flex-start}
+.loc .m{font-size:.72rem;color:var(--muted);margin:2px 0 8px}
+.bar{display:flex;height:8px;border-radius:99px;overflow:hidden;background:var(--border)}
+.bar i{display:block;height:100%}
+.loc .f{display:flex;justify-content:space-between;font-size:.72rem;margin-top:6px;font-weight:650}
+.ctl{display:grid;grid-template-columns:1fr 220px 170px auto;gap:10px;margin-bottom:10px}
+.ctl input,.ctl select{font:inherit;padding:9px 12px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);min-width:0;box-shadow:var(--sh)}
+.ctl input:focus,.ctl select:focus{outline:2px solid color-mix(in srgb,var(--accent) 45%,transparent)}
+.seg{display:inline-flex;padding:3px;border-radius:11px;background:var(--card);border:1px solid var(--border)}
+.seg button{font:inherit;font-weight:700;font-size:.8rem;border:0;background:none;color:var(--muted);padding:6px 12px;border-radius:8px;cursor:pointer}
+.seg button.on{background:var(--accent);color:#fff}
+.bar2{display:flex;align-items:center;gap:12px;font-size:.8rem;color:var(--muted);margin-bottom:8px;flex-wrap:wrap}
+.bar2 label{display:flex;gap:7px;align-items:center;font-weight:650;color:var(--text);cursor:pointer}
+.bar2 input{accent-color:var(--accent);width:16px;height:16px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.chip{font:inherit;font-size:.74rem;font-weight:700;padding:5px 11px;border-radius:99px;border:1px solid var(--border);background:var(--card);color:var(--muted);cursor:pointer}
+.chip.on{background:var(--text);color:var(--bg);border-color:var(--text)}
+.tw{border:1px solid var(--border);border-radius:14px;background:var(--card);box-shadow:var(--sh);overflow:hidden}
+.ts{overflow:auto;max-height:calc(100vh - 230px);min-height:260px}
+table{width:100%;border-collapse:separate;border-spacing:0;font-size:.84rem;min-width:1180px}
+th{position:sticky;top:0;z-index:5;background:var(--card);text-align:left;padding:10px 8px;font-size:.68rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);border-bottom:2px solid var(--border);white-space:nowrap}
+th.c,td.c{text-align:center}
+td{padding:6px 8px;border-bottom:1px solid var(--border);vertical-align:middle}
+tbody tr:nth-child(even) td{background:color-mix(in srgb,var(--text) 2.5%,transparent)}
+tbody tr:hover td{background:color-mix(in srgb,var(--accent) 7%,transparent)}
+tr.sel td{background:color-mix(in srgb,var(--accent) 13%,transparent)!important}
+td.st{width:6px;padding:0}
+tr.ok td.st{background:var(--ok)}tr.part td.st{background:var(--warn)}tr.none td.st{background:var(--err)}
+.mesa-n{font-weight:800;font-variant-numeric:tabular-nums}.sub{display:block;font-size:.7rem;color:var(--muted)}
+td.loc-c{max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pill{display:inline-block;font-size:.68rem;font-weight:800;padding:2px 8px;border-radius:99px}
+.pill.ok{background:color-mix(in srgb,var(--ok) 16%,transparent);color:var(--ok)}
+.pill.part{background:color-mix(in srgb,var(--warn) 18%,transparent);color:var(--warn)}
+.pill.none{background:color-mix(in srgb,var(--err) 15%,transparent);color:var(--err)}
+.hora{font-variant-numeric:tabular-nums;font-weight:650}.hora.late{color:var(--warn)}
+td.rl{cursor:pointer;text-align:center;width:40px}
+td.rl::after{content:"";display:block;width:20px;height:20px;margin:auto;border-radius:6px;border:1.5px solid var(--border);transition:.12s}
+td.rl.tit{background:color-mix(in srgb,var(--accent) 4%,transparent)}
+td.rl:hover::after{border-color:var(--ok)}
+td.rl.on::after{background:var(--ok) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M5 10.5l3.2 3.2L15 6.8' fill='none' stroke='%23fff' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");border-color:var(--ok)}
+td.rl.mem::after{border-color:var(--accent);border-style:dashed}td.rl.on.mem::after{border-style:solid;border-color:var(--accent)}
+td.ob{cursor:pointer;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.76rem}
+td.ob.has{color:var(--warn);font-weight:700;box-shadow:inset 3px 0 0 var(--warn)}td.ob .e{color:var(--muted);opacity:.5}
+td.ac{text-align:right;white-space:nowrap}
+td.ac button{font:inherit;border:1px solid transparent;background:none;border-radius:7px;width:30px;height:30px;cursor:pointer}
+td.ac button:hover{border-color:var(--border);background:var(--bg)}
+td.ac button.has{background:color-mix(in srgb,var(--accent) 14%,transparent)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:12px}
+.card{position:relative;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:13px 15px 12px 18px;box-shadow:var(--sh);cursor:pointer;overflow:hidden;display:flex;flex-direction:column;gap:7px}
+.card::before{content:"";position:absolute;inset:0 auto 0 0;width:5px;background:var(--c)}
+.card.ok{--c:var(--ok)}.card.part{--c:var(--warn)}.card.none{--c:var(--err)}
+.card.sel{border-color:var(--accent);box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 30%,transparent)}
+.card .h{display:flex;align-items:center;gap:8px}.card .h b{font-size:1.1rem;flex:1}
+.card .l{font-weight:600;font-size:.84rem}.card .mt{font-size:.72rem;color:var(--muted)}
+.rr{display:flex;gap:4px;flex-wrap:wrap}
+.rb{font-size:.66rem;font-weight:800;min-width:27px;text-align:center;padding:3px 5px;border-radius:6px;border:1px solid var(--border);color:var(--muted)}
+.rb.on{background:var(--ok);border-color:var(--ok);color:#fff}
+.ob-b{font-size:.76rem;font-weight:600;padding:6px 9px;border-radius:8px;border-left:3px solid var(--warn);background:color-mix(in srgb,var(--warn) 13%,transparent)}
+.tl{display:flex;gap:6px;border-top:1px dashed var(--border);padding-top:8px}
+.tl button{font:inherit;border:1px solid var(--border);background:none;border-radius:8px;padding:4px 9px;cursor:pointer}
+.tl button:hover{border-color:var(--accent)}.tl .sp{margin-left:auto}
+.empty{text-align:center;padding:50px 20px;color:var(--muted);border:1px dashed var(--border);border-radius:14px}
+.mbg{position:fixed;inset:0;background:rgba(8,12,24,.6);display:grid;place-items:center;z-index:100;padding:18px}
+.mbg[hidden]{display:none}
+.modal{background:var(--card);border-radius:16px;padding:20px;max-width:680px;width:100%;max-height:90vh;overflow:auto;box-shadow:0 20px 50px rgba(0,0,0,.4)}
+.modal.w{max-width:880px}
+.mh{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}.mh h3{margin:0;font-size:1.02rem}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:10px}.fg .s2{grid-column:1/-1}
+.fg label{display:flex;flex-direction:column;gap:4px;font-size:.76rem;font-weight:700;color:var(--muted)}
+.fg input:not([type=checkbox]),.fg select,.fg textarea,.imp{font:inherit;color:var(--text);background:var(--bg);border:1px solid var(--border);border-radius:9px;padding:8px 10px;width:100%}
+.fg textarea{min-height:64px;resize:vertical}
+.ck{display:flex;gap:6px;flex-wrap:wrap}.ck label{flex-direction:row;align-items:center;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:5px 10px;color:var(--text);cursor:pointer}
+.mf{display:flex;justify-content:flex-end;gap:8px;margin-top:16px;padding-top:12px;border-top:1px solid var(--border)}
+.imp{min-height:150px;font-family:ui-monospace,Consolas,monospace;font-size:.76rem}
+.info{font-size:.76rem;padding:8px 11px;border-radius:8px;background:color-mix(in srgb,var(--accent) 10%,transparent);color:var(--accent);margin-bottom:10px}
+.res{margin-top:10px;padding:9px 12px;border-radius:9px;background:color-mix(in srgb,var(--ok) 14%,transparent);color:var(--ok);font-weight:700;font-size:.84rem}
+.mt2{width:100%;border-collapse:collapse;min-width:0;font-size:.85rem}.mt2 th{position:static}
+.mt2 tr.ig td{background:color-mix(in srgb,var(--ok) 8%,transparent)}
+.mt2 td{padding:7px 8px}
+.bulkbar{position:fixed;left:0;right:0;bottom:0;z-index:50;padding:12px 0 calc(12px + env(safe-area-inset-bottom,0px));background:var(--card);border-top:1px solid var(--border);box-shadow:0 -10px 30px rgba(0,0,0,.15);transform:translateY(110%);transition:.2s}
+.bulkbar.show{transform:none}
+.bulkbar .wrap{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.cnt{font-weight:800;padding:7px 12px;border-radius:10px;background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent)}
+.rc{font:inherit;font-size:.76rem;font-weight:800;min-width:34px;padding:6px 9px;border-radius:9px;border:1.5px solid var(--border);background:none;color:var(--muted);cursor:pointer}
+.rc.on{background:var(--ok);border-color:var(--ok);color:#fff}
+.sp{flex:1}
+footer{padding:16px 0 26px;text-align:center;font-size:.76rem;color:var(--muted)}
+footer button{background:none;border:0;color:var(--muted);text-decoration:underline;cursor:pointer;font:inherit}
+#toast{position:fixed;left:50%;bottom:100px;transform:translate(-50%,16px);background:#0f172a;color:#fff;padding:10px 18px;border-radius:10px;font-weight:600;opacity:0;pointer-events:none;transition:.2s;z-index:200}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+.view{display:none}.view.on{display:block}
+@media(max-width:1000px){.kpis{grid-template-columns:repeat(3,1fr)}.kpi.hero{grid-column:1/-1}.ctl{grid-template-columns:1fr 1fr}}
+@media(max-width:560px){.kpis{grid-template-columns:1fr 1fr}.ctl{grid-template-columns:1fr}.wrap{padding:0 12px}}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <div class="top">
+    <div class="brand"><div class="logo">📊</div><div><h1>Seguimiento VO4</h1><p>Mesas de sufragio · Piura · Veintiséis de Octubre 4</p></div></div>
+    <div class="acts">
+      <button class="btn" id="copyBtn">📋 Copiar resumen</button>
+      <button class="btn r" id="impBtn">📥 Importar ONPE</button>
+      <button class="btn" id="locBtn">🏫 Locales</button>
+      <button class="btn p" id="addBtn">➕ Agregar mesa</button>
+      <button class="btn" id="themeBtn" title="Cambiar tema">🌙</button>
+    </div>
+  </div>
+  <div class="sync"><span class="dot"></span><span id="sync">Guardado en este navegador</span></div>
+</div></header>
+
+<main class="wrap">
+  <div class="alert"><span class="ic">🌊</span><div><b>Alerta Fenómeno El Niño Costero:</b> los <b><span id="aLoc">8</span> locales</b> de VO4 figuran en el listado oficial de locales de votación en riesgo de inundación (ODPE Piura · SER 2026). Cuentan <b><span id="aMes">82</span> mesas</b> y <b><span id="aEl">24,600</span> electores</b>.</div></div>
+  <section class="kpis" id="kpis"></section>
+  <div class="sec"><h2>Avance por local · clic para filtrar</h2>
+    <div class="leg"><span><i style="background:var(--ok)"></i>Completa</span><span><i style="background:var(--warn)"></i>Parcial</span><span><i style="background:var(--err)"></i>Sin titulares</span></div></div>
+  <section class="locs" id="locs"></section>
+
+  <section class="ctl">
+    <input id="q" type="search" autocomplete="off" placeholder="Buscar mesa, local, DNI, miembro, observación…  ( / )">
+    <select id="fLocal"></select>
+    <select id="fOrden"><option value="mesa">Orden: mesa</option><option value="hora">Orden: hora</option><option value="estado">Orden: más urgentes</option></select>
+    <div class="seg" id="seg"><button data-v="table" class="on">📊 Tabla</button><button data-v="cards">🃏 Tarjetas</button></div>
+  </section>
+  <div class="chips" id="chips"></div>
+  <div class="bar2"><label><input type="checkbox" id="selAll"> Seleccionar visibles</label><span id="cnt"></span><span class="sp"></span><button class="btn" id="selClr" hidden>Limpiar selección</button></div>
+
+  <div class="view on" id="vTable"><div class="tw"><div class="ts"><table>
+    <thead><tr><th style="width:6px;padding:0"></th><th>Mesa</th><th>Estado</th><th>Local</th><th>Hora</th>
+      <th class="c" title="Presidente">P</th><th class="c" title="Secretario">S</th><th class="c" title="Tercer miembro">3M</th>
+      <th class="c">1S</th><th class="c">2S</th><th class="c">3S</th><th class="c">4S</th><th class="c">5S</th><th class="c">6S</th>
+      <th>Elector</th><th>Observación</th><th></th></tr></thead>
+    <tbody id="tb"></tbody></table></div></div></div>
+  <div class="view" id="vCards"><div class="grid" id="grid"></div></div>
+  <div class="empty" id="empty" hidden>🔎 No se encontraron mesas con esos filtros.</div>
+</main>
+
+<div class="bulkbar" id="bulk"><div class="wrap">
+  <span class="cnt"><span id="bN">0</span> mesas</span>
+  <div id="bChips" style="display:flex;gap:5px;flex-wrap:wrap"></div><span class="sp"></span>
+  <button class="btn p" id="bMark" disabled>✓ Marcar</button>
+  <button class="btn" id="bUn" disabled>✗ Desmarcar</button>
+  <button class="btn" id="bCancel">Cancelar</button>
+</div></div>
+
+<footer><span id="tot"></span> mesas · <button id="resetBtn">Restaurar datos originales</button></footer>
+
+<div class="mbg" id="mBg" hidden><div class="modal">
+  <div class="mh"><h3 id="mTitle"></h3><button class="btn" data-close="mBg">✕</button></div>
+  <form id="form" autocomplete="off"><input type="hidden" name="orig"><div class="fg">
+    <label>N° correlativo<input name="n" type="number" min="1" required></label>
+    <label>Código LV<select name="codLV"></select></label>
+    <label class="s2">Local<input name="local" required></label>
+    <label class="s2">Dirección<input name="dir"></label>
+    <label>N° CA<input name="ca"></label>
+    <label>Mesa de sufragio<input name="mesa" required></label>
+    <label>Hora de instalación<input name="hora" type="time"></label>
+    <label>Elector de la fila<input name="elector" placeholder="DNI: 00000000"></label>
+    <div class="s2"><label>Titulares</label><div class="ck"><label><input type="checkbox" name="p">P</label><label><input type="checkbox" name="s">S</label><label><input type="checkbox" name="m3">3M</label></div></div>
+    <div class="s2"><label>Suplentes</label><div class="ck" id="supl"></div></div>
+    <label class="s2">Observación / incidente<textarea name="obs" placeholder="Describe la observación o incidente…"></textarea></label>
+  </div>
+  <div class="mf"><button type="button" class="btn" data-close="mBg">Cancelar</button><button class="btn p">💾 Guardar</button></div></form>
+</div></div>
+
+<div class="mbg" id="iBg" hidden><div class="modal w">
+  <div class="mh"><h3>📥 Importar miembros desde ONPE</h3><button class="btn" data-close="iBg">✕</button></div>
+  <div class="info">Pega las filas del Dashboard ONPE. Columnas: Mesa | ID local | Distrito general | Distrito | Local | Dirección | … | Cargo | Nombre del miembro | DNI del miembro</div>
+  <textarea class="imp" id="iText" placeholder="Pega aquí (tabulado, ; o ,)"></textarea>
+  <div style="margin-top:10px;font-size:.8rem;display:flex;gap:16px;flex-wrap:wrap;color:var(--muted)">
+    <label><input type="checkbox" id="iDist" checked> Solo distrito: <b>VEINTISEIS DE OCTUBRE 4</b></label>
+    <label><input type="checkbox" id="iZona" checked> Solo mesas existentes en mi zona</label></div>
+  <div class="res" id="iRes" hidden></div>
+  <div class="mf"><button class="btn" data-close="iBg">Cerrar</button><button class="btn p" id="iGo">⚙️ Procesar</button></div>
+</div></div>
+
+<div class="mbg" id="vBg" hidden><div class="modal w">
+  <div class="mh"><h3 id="vTitle"></h3><button class="btn" data-close="vBg">✕</button></div>
+  <div id="vBody"></div><div class="mf"><button class="btn" data-close="vBg">Cerrar</button></div>
+</div></div>
+
+<div class="mbg" id="lBg" hidden><div class="modal w">
+  <div class="mh"><h3>🏫 Locales de VO4</h3><button class="btn" data-close="lBg">✕</button></div>
+  <div class="info">Administra los colegios de VO4. Al agregar un local se crean sus mesas; al reducir la cantidad se eliminan las últimas mesas del local.</div>
+  <div id="lList"></div>
+  <form id="lForm" autocomplete="off" style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">
+    <input type="hidden" name="origC">
+    <div class="fg">
+      <label>ID Local (LV)<input name="c" required placeholder="4173"></label>
+      <label>Nombre corto<input name="cor" required placeholder="Pedagógica Piura"></label>
+      <label class="s2">Nombre del local<input name="nom" required></label>
+      <label class="s2">Dirección<input name="dir"></label>
+      <label>N° CA<input name="ca"></label>
+      <label>Electores hábiles<input name="el" type="number" min="0" value="0"></label>
+      <label>Primera mesa<input name="m" type="number" min="1" value="1" required></label>
+      <label>N° de mesas<input name="n" type="number" min="1" value="1" required></label>
+    </div>
+    <div class="mf"><button type="reset" class="btn" id="lReset">Limpiar</button><button class="btn p">💾 Guardar local</button></div>
+  </form>
+</div></div>
+<div id="toast"></div>
+
+<script>
+const ROLES=["p","s","m3","s1","s2","s3","s4","s5","s6"],LB={p:"P",s:"S",m3:"3M",s1:"1S",s2:"2S",s3:"3S",s4:"4S",s5:"5S",s6:"6S"};
+const TIT=new Set(["p","s","m3"]),KEY="vo4_mesas_v3",LOCS_KEY="vo4_locs_v1",D4="VEINTISEIS DE OCTUBRE 4";
+const CARGO={"PRESIDENTE":"p","SECRETARIO":"s","TERCER MIEMBRO":"m3","1ER SUPLENTE":"s1","2DO SUPLENTE":"s2","3ER SUPLENTE":"s3","4TO SUPLENTE":"s4","5TO SUPLENTE":"s5","6TO SUPLENTE":"s6"};
+
+/* ===== Locales oficiales de VO4 (8 colegios; todos en la lista de riesgo de inundación) =====
+   c=ID local · nom=nombre · cor=corto · dir=dirección · ca=N° CA · n=1ra mesa correlativa
+   m=1ra mesa ONPE · el=electores hábiles · d="HHMM:PS3M1S2S3S4S5S6S" por mesa */
+const LOCS_DEF=[
+{c:"4173",nom:"ESCUELA DE EDUCACION SUPERIOR PEDAGOGICA PUBLICA PIURA",cor:"Pedagógica Piura",dir:"AV RAUL MATA SN AAHH SANTA ROSA",ca:"49",n:803,m:70632,el:4200,d:"0707:100001100 0828:000011001 0705:110010000 0727:010110000 0726:001011000 0650:011100000 0704:101010000 0718:110100000 0721:111000000 0648:111000000 0733:000111000 0722:011010000 0725:001100100 0624:111000000"},
+{c:"51039",nom:"IE 20463 MONSEÑOR RAMÓN ZUBIETA",cor:"Mons. Ramón Zubieta",dir:"MZ M LT 1 AAHH MANUEL SEOANE CORRALES",ca:"51",n:817,m:70657,el:4200,d:"0712:010101000 0703:110100000 0651:111000000 0720:001010100 0700:101100000 0737:010001001 0610:111000000 0709:110100000 0644:111000000 0704:101100000 0705:110001000 0706:001110000 0707:011100000 0718:111000000"},
+{c:"52414",nom:"IEP INMACULADA CONCEPCION",cor:"Inmaculada Concepción",dir:"URB LOS TALLANES MZ A LOTE 26 I ETAPA",ca:"56",n:831,m:70704,el:1500,d:"0719:010110000 0711:101000010 0703:011010000 0707:011100000 0807:100000110"},
+{c:"52491",nom:"IEP PITAGORAS SCHOOLS",cor:"Pitágoras Schools",dir:"CALLE JERUSALEN MZ A1 LT 08 SECTOR B AAHH LA MOLINA II",ca:"57",n:836,m:70713,el:1800,d:"0702:110001000 0733:100000101 0719:011001000 0729:011100000 0704:001100100 0635:111000000"},
+{c:"52804",nom:"IEP JESUS MARIA",cor:"Jesús María",dir:"CALLE 16 MZ R1 LT 8-9 Y 10 AAHH LAS DALIAS II ETAPA",ca:"59",n:842,m:70727,el:2700,d:"0823:110000000 0705:101010000 0631:111000000 0702:110100000 0622:111000000 0707:110010000 0659:111000000 0711:101010000 0706:111000000"},
+{c:"52820",nom:"IEP GENNIUS SCHOOL",cor:"Gennius School",dir:"MZ E LT 2 AAHH LA MOLINA II",ca:"60",n:851,m:70736,el:1500,d:"0637:111000000 0720:010001100 0707:001110000 0648:111000000 0630:111000000"},
+{c:"53742",nom:"IEP LAS PALMAS",cor:"Las Palmas",dir:"MZ D LOTE 21 URB MORONI",ca:"63",n:856,m:70777,el:2700,d:"0637:111000000 0705:110010000 0705:101001000 0658:111000000 0705:111000000 0702:101100000 0659:111000000 0622:111000000 0706:101100000"},
+{c:"53809",nom:"IE JORGE BASADRE",cor:"Jorge Basadre",dir:"AV GRAU 2980 AAHH SANTA ROSA",ca:"66",n:865,m:70807,el:6000,d:"0705:101100000 0712:010011000 0714:010100100 0710:101000001 0718:101010000 0719:101100000 0716:100100100 0641:111000000 0706:110100000 0714:110010000 0724:100011000 0726:111000000 0637:111000000 0652:111000000 0711:011000100 0653:111000000 0704:110100000 0728:001100010 0707:010011000 0643:111000000"}];
+
+/* ---- Locales mutables (persistidos) ---- */
+function loadLocs(){try{const p=JSON.parse(localStorage.getItem(LOCS_KEY));if(Array.isArray(p)&&p.length)return p.filter(l=>l.c!=="13980")}catch{}return JSON.parse(JSON.stringify(LOCS_DEF))}
+let LOCS=loadLocs();
+let LI=Object.fromEntries(LOCS.map(l=>[l.c,l]));
+const rebuildLI=()=>{LI=Object.fromEntries(LOCS.map(l=>[l.c,l]))};
+const saveLocs=()=>{try{localStorage.setItem(LOCS_KEY,JSON.stringify(LOCS))}catch{}};
+
+function mesasFromDef(L){
+  const parts=(L.d||"").split(" ").filter(Boolean),out=[];
+  parts.forEach((t,i)=>{const[h,b]=t.split(":");
+    out.push({n:0,codLV:L.c,local:L.nom,dir:L.dir,ca:L.ca,mesa:String(L.m+i),hora:h.slice(0,2)+":"+h.slice(2),elector:"",obs:"",distrito:D4,miembros:{},
+      p:b[0]==="1",s:b[1]==="1",m3:b[2]==="1",s1:b[3]==="1",s2:b[4]==="1",s3:b[5]==="1",s4:b[6]==="1",s5:b[7]==="1",s6:b[8]==="1"})});
+  return out;
+}
+function demo(){
+  const a=[];let nn=0;
+  LOCS.forEach(L=>{const ms=mesasFromDef(L);ms.forEach((m,i)=>{m.n=++nn;a.push(m)})});
+  const x=a.find(m=>m.n===842);if(x)x.elector="DNI: 80339159";
+  return a;
+}
+function load(){try{const p=JSON.parse(localStorage.getItem(KEY));if(Array.isArray(p)&&p.length)return p.map(m=>({obs:"",miembros:{},distrito:D4,...m})).filter(m=>m.codLV!=="13980")}catch{}return demo()}
+let DATA=load();
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(DATA))}catch{}};
+
+/* Migración: si un local de la lista no tiene mesas en los datos guardados, las crea */
+function migrate(){
+  let ch=false;
+  LOCS.forEach(L=>{
+    if(DATA.some(m=>m.codLV===L.c))return;
+    const ms=mesasFromDef(L);if(!ms.length)return;
+    let base=DATA.reduce((a,x)=>Math.max(a,x.n),0);
+    ms.forEach(m=>{m.n=++base;DATA.push(m)});
+    ch=true;
+  });
+  if(ch)save();
+}
+migrate();
+
+const S={q:"",local:"todos",chip:"todas",orden:"mesa",view:"table",sel:new Set(),tr:new Set()};
+const $=id=>document.getElementById(id),esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const st=m=>m.p&&m.s&&m.m3?"ok":(!m.p&&!m.s&&!m.m3?"none":"part"),STL={ok:"Completa",part:"Parcial",none:"Sin titulares"};
+const hasMem=m=>ROLES.some(r=>m.miembros?.[r]?.nombre),fmt=n=>n.toLocaleString("es-PE");
+const late=m=>m.hora&&m.hora>"07:30";
+let tt;function toast(t){const e=$("toast");e.textContent=t;e.classList.add("show");clearTimeout(tt);tt=setTimeout(()=>e.classList.remove("show"),2300)}
+function flash(){$("sync").textContent="Guardado · "+new Date().toLocaleTimeString("es-PE",{hour:"2-digit",minute:"2-digit"})}
+
+const CHIPS=[["todas","Todas"],["ok","✅ Completas"],["part","🟡 Parciales"],["none","🔴 Sin titulares"],["obs","⚠️ Con observación"],["late","⏰ Instaladas tarde"],["mem","👥 Con miembros ONPE"],["elec","👤 Con elector"]];
+function pasa(m){
+  if(S.local!=="todos"&&m.codLV!==S.local)return false;
+  const c=S.chip;
+  if(c==="ok"||c==="part"||c==="none"){if(st(m)!==c)return false}
+  else if(c==="obs"&&!m.obs)return false;else if(c==="late"&&!late(m))return false;
+  else if(c==="mem"&&!hasMem(m))return false;else if(c==="elec"&&!m.elector)return false;
+  if(S.q){const mi=Object.values(m.miembros||{}).map(x=>(x?.nombre||"")+" "+(x?.dni||"")).join(" ");
+    if(![m.mesa,m.local,m.codLV,m.n,m.dir,m.elector,m.obs,mi].join(" ").toLowerCase().includes(S.q.toLowerCase()))return false}
+  return true}
+function vis(){const o={none:0,part:1,ok:2};return DATA.filter(pasa).sort((a,b)=>S.orden==="hora"?(a.hora||"99").localeCompare(b.hora||"99"):S.orden==="estado"?o[st(a)]-o[st(b)]||a.mesa-b.mesa:a.mesa-b.mesa)}
+
+function renderTop(){
+  const t=DATA.length,ok=DATA.filter(m=>st(m)==="ok").length,none=DATA.filter(m=>st(m)==="none").length,part=t-ok-none;
+  const obs=DATA.filter(m=>m.obs).length,mem=DATA.filter(hasMem).length,lt=DATA.filter(late).length,p=t?Math.round(ok*100/t):0;
+  const elec=LOCS.reduce((a,l)=>a+(+l.el||0),0);
+  $("kpis").innerHTML=`<div class="kpi hero"><div class="ring" style="--p:${p}"><span>${p}%</span></div><div><div class="l">Mesas completas (P+S+3M)</div><div class="v c-ok">${ok}<span class="s"> de ${t}</span></div><div class="s">${part} parciales · ${none} sin titulares</div></div></div>
+  <div class="kpi"><div class="l">Parciales</div><div class="v c-warn">${part}</div><div class="s">faltan titulares</div></div>
+  <div class="kpi"><div class="l">Sin titulares</div><div class="v c-err">${none}</div><div class="s">prioridad alta</div></div>
+  <div class="kpi"><div class="l">⚠️ Observaciones</div><div class="v ${obs?"c-warn":""}">${obs}</div><div class="s">${lt} instaladas después 07:30</div></div>
+  <div class="kpi"><div class="l">👥 Con miembros ONPE</div><div class="v c-acc">${mem}</div><div class="s">${t?Math.round(mem*100/t):0}% de las mesas</div></div>
+  <div class="kpi"><div class="l">🌊 Electores en riesgo</div><div class="v c-risk">${fmt(elec)}</div><div class="s">${LOCS.length} locales</div></div>`;
+  /* alerta dinámica */
+  $("aLoc").textContent=LOCS.length;$("aMes").textContent=t;$("aEl").textContent=fmt(elec);
+  const g={};DATA.forEach(m=>{(g[m.codLV]??=[]).push(m)});
+  $("locs").innerHTML=Object.entries(g).map(([c,a])=>{const o=a.filter(m=>st(m)==="ok").length,n=a.filter(m=>st(m)==="none").length,pp=a.length-o-n,i=LI[c];
+    return`<div class="loc ${S.local===c?"on":""}" data-c="${c}"><div class="n"><span>${esc(i?.cor||a[0].local)}</span>${i?"<em>🌊 RIESGO</em>":""}</div>
+    <div class="m">${a.length} mesas${i?" · "+fmt(i.el)+" electores":""} · Cód. ${c}</div>
+    <div class="bar"><i style="width:${o*100/a.length}%;background:var(--ok)"></i><i style="width:${pp*100/a.length}%;background:var(--warn)"></i><i style="width:${n*100/a.length}%;background:var(--err)"></i></div>
+    <div class="f"><span class="c-ok">${o} completas</span><span class="${n?"c-err":""}">${n?n+" sin titulares":Math.round(o*100/a.length)+"%"}</span></div></div>`}).join("");
+  $("tot").textContent=t;
+}
+function renderFilters(){
+  const ls=[...new Set(DATA.map(m=>m.codLV))].map(c=>[c,DATA.find(m=>m.codLV===c).local]).sort((a,b)=>a[1].localeCompare(b[1]));
+  $("fLocal").innerHTML='<option value="todos">Todos los locales</option>'+ls.map(([c,n])=>`<option value="${c}" ${S.local===c?"selected":""}>${esc(n)}</option>`).join("");
+  $("chips").innerHTML=CHIPS.map(([k,l])=>`<button class="chip ${S.chip===k?"on":""}" data-k="${k}">${l}</button>`).join("")}
+function rowHTML(m){
+  const s=st(m),sel=S.sel.has(m.n),i=LI[m.codLV];
+  const roles=ROLES.map(r=>`<td class="rl ${TIT.has(r)?"tit":""} ${m[r]?"on":""} ${m.miembros?.[r]?.nombre?"mem":""}" data-n="${m.n}" data-r="${r}" title="${esc(m.miembros?.[r]?.nombre?m.miembros[r].nombre+" · DNI "+(m.miembros[r].dni||"—"):LB[r])}"></td>`).join("");
+  return`<tr class="${s} ${sel?"sel":""}" data-n="${m.n}"><td class="st"></td>
+  <td><input type="checkbox" class="rk" ${sel?"checked":""}> <span class="mesa-n">${esc(m.mesa)}</span><span class="sub">N° ${m.n}</span></td>
+  <td><span class="pill ${s}">${STL[s]}</span></td>
+  <td class="loc-c" title="${esc(m.local)} · ${esc(m.dir)}">${esc(i?.cor||m.local)}<span class="sub">Cód. ${esc(m.codLV)} · CA ${esc(m.ca)}</span></td>
+  <td class="hora ${late(m)?"late":""}">${esc(m.hora||"--:--")}</td>${roles}
+  <td class="${m.elector?"c-acc":""}" style="font-weight:700;font-size:.76rem">${esc(m.elector||"—")}</td>
+  <td class="ob ${m.obs?"has":""}" data-n="${m.n}" title="${esc(m.obs)}">${m.obs?"⚠️ "+esc(m.obs):'<span class="e">+ agregar</span>'}</td>
+  <td class="ac"><button class="${hasMem(m)?"has":""}" data-a="mem" data-n="${m.n}" title="Miembros ONPE">👥</button><button data-a="edit" data-n="${m.n}" title="Editar">✏️</button><button data-a="del" data-n="${m.n}" title="Eliminar">🗑️</button></td></tr>`}
+function cardHTML(m){const s=st(m),i=LI[m.codLV];
+  return`<article class="card ${s} ${S.sel.has(m.n)?"sel":""}" data-n="${m.n}"><div class="h"><b>#${esc(m.mesa)}</b><span class="pill ${s}">${STL[s]}</span><span class="hora ${late(m)?"late":""}">🕐 ${esc(m.hora||"--:--")}</span></div>
+  <div class="l">${esc(i?.cor||m.local)}</div><div class="mt">Cód. ${esc(m.codLV)} · CA ${esc(m.ca)} · N° ${m.n}</div>
+  <div class="rr">${ROLES.map(r=>`<span class="rb ${m[r]?"on":""}" title="${esc(m.miembros?.[r]?.nombre||"")}">${LB[r]}</span>`).join("")}</div>
+  ${m.elector?`<div class="mt c-acc" style="font-weight:700">👤 ${esc(m.elector)}</div>`:""}${m.obs?`<div class="ob-b">⚠️ ${esc(m.obs)}</div>`:""}
+  <div class="tl"><button data-a="edit" data-n="${m.n}">✏️</button><button data-a="mem" data-n="${m.n}">👥</button><button class="sp" data-a="del" data-n="${m.n}">🗑️</button></div></article>`}
+function render(){
+  renderTop();const l=vis();
+  $("cnt").textContent=l.length===DATA.length?`${l.length} mesas`:`Mostrando ${l.length} de ${DATA.length}`;
+  $("empty").hidden=l.length>0;
+  $("tb").innerHTML=S.view==="table"?l.map(rowHTML).join(""):"";
+  $("grid").innerHTML=S.view==="cards"?l.map(cardHTML).join(""):"";
+  $("vTable").classList.toggle("on",S.view==="table");$("vCards").classList.toggle("on",S.view==="cards");
+  $("seg").querySelectorAll("button").forEach(b=>b.classList.toggle("on",b.dataset.v===S.view));
+  renderFilters();selUI()}
+function selUI(){
+  const l=vis(),n=S.sel.size,vs=l.filter(m=>S.sel.has(m.n)).length,a=$("selAll");
+  a.checked=l.length>0&&vs===l.length;a.indeterminate=vs>0&&vs<l.length;$("selClr").hidden=!n;
+  $("bN").textContent=n;$("bulk").classList.toggle("show",n>0);document.body.classList.toggle("bulk",n>0);
+  $("bMark").disabled=$("bUn").disabled=!(n&&S.tr.size)}
+
+/* acciones */
+function toggleCell(n,r){const m=DATA.find(x=>x.n===+n);if(!m)return;m[r]=!m[r];
+  document.querySelectorAll(`td.rl[data-n="${n}"][data-r="${r}"]`).forEach(c=>c.classList.toggle("on",m[r]));
+  const tr=document.querySelector(`tr[data-n="${n}"]`);if(tr){tr.className=tr.className.replace(/\b(ok|part|none)\b/,st(m));const p=tr.querySelector(".pill");p.className="pill "+st(m);p.textContent=STL[st(m)]}
+  save();flash();renderTop()}
+function toggleSel(n){n=+n;S.sel.has(n)?S.sel.delete(n):S.sel.add(n);
+  document.querySelectorAll(`tr[data-n="${n}"],.card[data-n="${n}"]`).forEach(e=>{e.classList.toggle("sel",S.sel.has(n));const c=e.querySelector(".rk");if(c)c.checked=S.sel.has(n)});selUI()}
+
+function fillLocSelect(sel,extra){
+  let h=LOCS.map(l=>`<option value="${esc(l.c)}">${esc(l.c)} — ${esc(l.cor||l.nom)}</option>`).join("");
+  if(extra&&!LI[extra.c])h+=`<option value="${esc(extra.c)}">${esc(extra.c)} — ${esc(extra.n)}</option>`;
+  sel.innerHTML=h;
+}
+function openEdit(m,focusObs){const f=$("form");f.reset();
+  fillLocSelect(f.codLV,m?{c:m.codLV,n:m.local}:null);
+  $("mTitle").textContent=m?"Editar mesa #"+m.mesa:"Agregar nueva mesa";f.orig.value=m?m.n:"";
+  if(m){["n","codLV","local","dir","ca","mesa","elector","obs"].forEach(k=>f[k].value=m[k]||"");f.hora.value=m.hora||"07:00";ROLES.forEach(r=>f[r].checked=!!m[r])}
+  else{f.hora.value="07:00";f.n.value=DATA.reduce((a,x)=>Math.max(a,x.n),0)+1;
+    if(S.local!=="todos"&&LI[S.local]){f.codLV.value=S.local;f.local.value=LI[S.local].nom;f.dir.value=LI[S.local].dir||"";f.ca.value=LI[S.local].ca||""}}
+  $("mBg").hidden=false;setTimeout(()=>(focusObs?f.obs:f.n).focus(),40)}
+
+$("supl").innerHTML=["s1","s2","s3","s4","s5","s6"].map(r=>`<label><input type="checkbox" name="${r}">${LB[r]}</label>`).join("");
+$("form").codLV.addEventListener("change",e=>{const L=LI[e.target.value];if(!L)return;const f=$("form");
+  f.local.value=L.nom;f.dir.value=L.dir||"";f.ca.value=L.ca||""});
+$("form").addEventListener("submit",e=>{e.preventDefault();const f=e.target,fd=new FormData(f),o=+fd.get("orig")||0;
+  const d={n:+fd.get("n"),codLV:fd.get("codLV").trim(),local:fd.get("local").trim(),dir:fd.get("dir").trim(),ca:fd.get("ca").trim(),mesa:fd.get("mesa").trim(),hora:fd.get("hora"),elector:fd.get("elector").trim(),obs:fd.get("obs").trim(),distrito:D4};
+  ROLES.forEach(r=>d[r]=fd.get(r)==="on");
+  if(DATA.some(m=>m.n===d.n&&m.n!==o))return toast("❌ Ya existe el N° "+d.n);
+  if(o){const i=DATA.findIndex(m=>m.n===o);d.miembros=DATA[i].miembros;DATA[i]=d;S.sel.delete(o)}else{d.miembros={};DATA.push(d)}
+  save();flash();$("mBg").hidden=true;toast("✅ Guardado");render()});
+
+function verMiembros(n){const m=DATA.find(x=>x.n===+n);if(!m)return;
+  $("vTitle").innerHTML=`👥 Mesa #${esc(m.mesa)} <small style="font-weight:400;color:var(--muted)">· ${esc(m.local)}</small>`;
+  $("vBody").innerHTML=`<table class="mt2"><thead><tr><th style="width:70px">Cargo</th><th>Miembro asignado (ONPE)</th><th class="c" style="width:80px">Integró</th></tr></thead><tbody>`+
+  ROLES.map(r=>{const x=m.miembros?.[r];return`<tr class="${m[r]?"ig":""}"><td><b>${LB[r]}</b></td><td>${x?.nombre?`<b>${esc(x.nombre)}</b><span class="sub">DNI ${esc(x.dni||"—")}</span>`:'<span class="sub">Sin asignar por ONPE</span>'}</td><td class="c">${m[r]?'<b class="c-ok">✓</b>':"—"}</td></tr>`}).join("")+`</tbody></table>`;
+  $("vBg").hidden=false}
+function resumen(){const t=DATA.length,ok=DATA.filter(m=>st(m)==="ok").length,none=DATA.filter(m=>st(m)==="none");
+  let s=`📊 SEGUIMIENTO VO4 — ${new Date().toLocaleTimeString("es-PE",{hour:"2-digit",minute:"2-digit"})}\nMesas completas: ${ok}/${t} (${t?Math.round(ok*100/t):0}%)\nParciales: ${t-ok-none.length} · Sin titulares: ${none.length}\n`;
+  const g={};DATA.forEach(m=>{(g[m.codLV]??=[]).push(m)});
+  Object.entries(g).forEach(([c,a])=>{s+=`• ${LI[c]?.cor||a[0].local}: ${a.filter(m=>st(m)==="ok").length}/${a.length}\n`});
+  const ob=DATA.filter(m=>m.obs);if(ob.length)s+=`\n⚠️ Observaciones:\n`+ob.map(m=>`Mesa ${m.mesa}: ${m.obs}`).join("\n");return s}
+
+/* importar */
+function parseLine(l){const s=l.includes("\t")?"\t":(l.split(";").length>l.split(",").length?";":",");return l.split(s).map(x=>x.trim())}
+function importar(){const txt=$("iText").value.trim();if(!txt)return toast("❌ Pega los datos primero");
+  const lines=txt.split(/\r?\n/).filter(x=>x.trim()),ix={mesa:0,dist:3,cargo:12,nom:13,dni:14};
+  if(/MESA/i.test(lines[0])&&/CARGO/i.test(lines[0])){const c=parseLine(lines.shift()).map(x=>x.toUpperCase()),f=k=>c.findIndex(x=>x.includes(k));
+    if(f("MESA")>=0)ix.mesa=f("MESA");const d=c.findIndex((x,i)=>i>2&&x.includes("DISTRITO"));if(d>=0)ix.dist=d;
+    if(f("CARGO")>=0)ix.cargo=f("CARGO");ix.nom=f("NOMBRE DEL MIEMBRO")>=0?f("NOMBRE DEL MIEMBRO"):(f("NOMBRE")>=0?f("NOMBRE"):ix.nom);ix.dni=f("DNI DEL MIEMBRO")>=0?f("DNI DEL MIEMBRO"):ix.dni}
+  let ok=0,ign=0,sc=0;const nf=new Set();
+  for(const ln of lines){const r=parseLine(ln);if(r.length<3)continue;const mesa=(r[ix.mesa]||"");if(!/^\d+$/.test(mesa))continue;
+    if($("iDist").checked){const d=(r[ix.dist]||"").toUpperCase();if(d&&d!==D4){ign++;continue}}
+    const role=CARGO[(r[ix.cargo]||"").toUpperCase()],nom=r[ix.nom]||"";if(!role||!nom){sc++;continue}
+    const m=DATA.find(x=>x.mesa===mesa)||DATA.find(x=>String(x.n)===mesa);
+    if(!m){nf.add(mesa);ign++;continue}
+    (m.miembros??={})[role]={nombre:nom,dni:r[ix.dni]||""};ok++}
+  save();render();const e=$("iRes");e.hidden=false;
+  e.innerHTML=`✅ <b>${ok}</b> miembros cargados${ign?` · ${ign} ignorados`:""}${sc?` · ${sc} sin cargo válido`:""}${nf.size?`<br><small>${nf.size} mesas fuera de tu zona (${[...nf].slice(0,5).join(", ")}${nf.size>5?"…":""})</small>`:""}`;toast("✅ Importación lista")}
+
+/* ===== Locales: administración ===== */
+function renderLocsModal(){
+  const g={};DATA.forEach(m=>{(g[m.codLV]??=[]).push(m)});
+  $("lList").innerHTML=`<div style="max-height:280px;overflow:auto"><table class="mt2"><thead><tr><th>ID Local</th><th>Nombre</th><th class="c">Mesas</th><th class="c">Electores</th><th class="c"></th></tr></thead><tbody>`+
+    LOCS.map(L=>{const cnt=(g[L.c]||[]).length;
+      return `<tr><td><b>${esc(L.c)}</b></td><td>${esc(L.nom)}<span class="sub">${esc(L.dir||"—")}</span></td><td class="c"><b>${cnt}</b></td><td class="c">${fmt(+L.el||0)}</td>
+      <td class="c" style="white-space:nowrap"><button class="btn" data-le="${esc(L.c)}" style="padding:3px 8px" title="Editar">✏️</button> <button class="btn" data-ld="${esc(L.c)}" style="padding:3px 8px" title="Eliminar">🗑️</button></td></tr>`}).join("")+
+    `</tbody></table></div>`;
+}
+function nuevaMesa(L,mesaNum,n){
+  return {n,codLV:L.c,local:L.nom,dir:L.dir,ca:L.ca,mesa:String(mesaNum),hora:"",elector:"",obs:"",distrito:D4,miembros:{},
+    p:false,s:false,m3:false,s1:false,s2:false,s3:false,s4:false,s5:false,s6:false};
+}
+$("lList").addEventListener("click",e=>{
+  const ed=e.target.closest("[data-le]");
+  if(ed){const L=LI[ed.dataset.le];if(!L)return;const f=$("lForm");f.reset();
+    ["c","cor","nom","dir","ca","el","m","n"].forEach(k=>f[k].value=L[k]??"");
+    if(!f.m.value||+f.m.value<1){const ms=DATA.filter(m=>m.codLV===L.c);f.m.value=ms.length?Math.min(...ms.map(m=>+m.mesa||0)):1}
+    f.origC.value=L.c;f.c.focus();return}
+  const dl=e.target.closest("[data-ld]");
+  if(dl){const c=dl.dataset.ld,L=LI[c],cnt=DATA.filter(m=>m.codLV===c).length;
+    if(!confirm(`¿Eliminar el local ${L.cor||L.nom} y sus ${cnt} mesas?`))return;
+    LOCS=LOCS.filter(x=>x.c!==c);DATA=DATA.filter(m=>m.codLV!==c);
+    rebuildLI();saveLocs();save();render();renderLocsModal();toast("🗑️ Local eliminado")}
+});
+$("lForm").addEventListener("submit",e=>{
+  e.preventDefault();const f=e.target,fd=new FormData(f),o=fd.get("origC")||"";
+  const L={c:fd.get("c").trim(),cor:fd.get("cor").trim(),nom:fd.get("nom").trim(),dir:fd.get("dir").trim(),ca:fd.get("ca").trim(),
+    m:+fd.get("m")||1,n:+fd.get("n")||1,el:+fd.get("el")||0};
+  if(!L.c||!L.nom)return toast("❌ Completa ID y nombre del local");
+  if(LOCS.some(x=>x.c===L.c&&x.c!==o))return toast("❌ Ya existe el ID de local "+L.c);
+  if(!o&&DATA.some(m=>m.codLV===L.c))return toast("❌ Ese ID ya tiene mesas registradas");
+  const ms=DATA.filter(m=>m.codLV===(o||L.c));
+  ms.forEach(m=>{m.codLV=L.c;m.local=L.nom;m.dir=L.dir;m.ca=L.ca});
+  const cur=ms.length;
+  if(cur<L.n){
+    let mx=ms.length?Math.max(...ms.map(m=>+m.mesa||0)):(L.m-1);
+    let nn=DATA.reduce((a,x)=>Math.max(a,x.n),0);
+    for(let i=cur;i<L.n;i++)DATA.push(nuevaMesa(L,++mx,++nn));
+  }else if(cur>L.n){
+    if(!confirm(`Se eliminarán ${cur-L.n} mesas de ${L.cor||L.nom}. ¿Continuar?`))return;
+    const ord=[...ms].sort((a,b)=>(+a.mesa||0)-(+b.mesa||0)),del=new Set(ord.slice(L.n).map(m=>m.n));
+    DATA=DATA.filter(m=>!del.has(m.n));
+  }
+  const old=LOCS.find(x=>x.c===o);
+  if(old)Object.assign(old,L);else LOCS.push(L);
+  rebuildLI();saveLocs();save();f.reset();f.origC.value="";
+  render();renderLocsModal();toast("✅ Local guardado");
+});
+$("lReset").onclick=()=>{const f=$("lForm");setTimeout(()=>{f.origC.value=""},0)};
+
+/* eventos */
+$("tb").addEventListener("click",e=>{const c=e.target.closest(".rl");if(c)return toggleCell(c.dataset.n,c.dataset.r);
+  const o=e.target.closest(".ob");if(o)return openEdit(DATA.find(m=>m.n===+o.dataset.n),true);
+  if(e.target.matches(".rk"))return toggleSel(e.target.closest("tr").dataset.n);
+  const b=e.target.closest("button[data-a]");if(b)return act(b);const r=e.target.closest("tr");if(r)toggleSel(r.dataset.n)});
+$("grid").addEventListener("click",e=>{const b=e.target.closest("button[data-a]");if(b)return act(b);const c=e.target.closest(".card");if(c)toggleSel(c.dataset.n)});
+function act(b){const n=+b.dataset.n,m=DATA.find(x=>x.n===n);if(!m)return;
+  if(b.dataset.a==="edit")openEdit(m);else if(b.dataset.a==="mem")verMiembros(n);
+  else if(confirm(`¿Eliminar la mesa #${m.mesa}?`)){DATA=DATA.filter(x=>x.n!==n);S.sel.delete(n);save();toast("🗑️ Mesa eliminada");render()}}
+$("locs").addEventListener("click",e=>{const c=e.target.closest(".loc");if(!c)return;S.local=S.local===c.dataset.c?"todos":c.dataset.c;render()});
+$("chips").addEventListener("click",e=>{const c=e.target.closest(".chip");if(c){S.chip=c.dataset.k;render()}});
+$("fLocal").onchange=e=>{S.local=e.target.value;render()};$("fOrden").onchange=e=>{S.orden=e.target.value;render()};
+$("q").oninput=e=>{S.q=e.target.value;render()};
+$("seg").onclick=e=>{const b=e.target.closest("button");if(b){S.view=b.dataset.v;render()}};
+$("selAll").onchange=e=>{e.target.checked?vis().forEach(m=>S.sel.add(m.n)):S.sel.clear();render()};
+$("selClr").onclick=()=>{S.sel.clear();render()};
+$("bChips").innerHTML=ROLES.map(r=>`<button class="rc" data-r="${r}">${LB[r]}</button>`).join("");
+$("bChips").onclick=e=>{const c=e.target.closest(".rc");if(!c)return;S.tr.has(c.dataset.r)?S.tr.delete(c.dataset.r):S.tr.add(c.dataset.r);c.classList.toggle("on");selUI()};
+function lote(v){DATA.forEach(m=>{if(S.sel.has(m.n))S.tr.forEach(r=>m[r]=v)});save();flash();toast(`✅ ${v?"Marcadas":"Desmarcadas"} ${S.sel.size} mesas`);render()}
+$("bMark").onclick=()=>lote(true);$("bUn").onclick=()=>lote(false);
+$("bCancel").onclick=()=>{S.sel.clear();S.tr.clear();document.querySelectorAll(".rc").forEach(c=>c.classList.remove("on"));render()};
+$("addBtn").onclick=()=>openEdit(null);
+$("impBtn").onclick=()=>{$("iBg").hidden=false;$("iRes").hidden=true};$("iGo").onclick=importar;
+$("locBtn").onclick=()=>{renderLocsModal();$("lBg").hidden=false};
+$("copyBtn").onclick=async()=>{try{await navigator.clipboard.writeText(resumen());toast("📋 Resumen copiado")}catch{prompt("Copia el resumen:",resumen())}};
+document.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>$(b.dataset.close).hidden=true);
+document.querySelectorAll(".mbg").forEach(b=>b.addEventListener("click",e=>{if(e.target===b)b.hidden=true}));
+$("resetBtn").onclick=()=>{if(!confirm("¿Borrar los cambios y volver a los locales y mesas originales?"))return;
+  LOCS=JSON.parse(JSON.stringify(LOCS_DEF));rebuildLI();saveLocs();DATA=demo();S.sel.clear();save();render();toast("🔄 Datos restaurados")};
+document.addEventListener("keydown",e=>{if(e.key==="Escape"){document.querySelectorAll(".mbg").forEach(b=>b.hidden=true);if(S.sel.size){S.sel.clear();render()}}
+  if(e.key==="/"&&!/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)){e.preventDefault();$("q").focus()}});
+function tema(t){document.documentElement.dataset.theme=t;$("themeBtn").textContent=t==="dark"?"☀️":"🌙";try{localStorage.setItem("tema",t)}catch{}}
+{let g=null;try{g=localStorage.getItem("tema")}catch{}tema(g||(matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light"))}
+$("themeBtn").onclick=()=>tema(document.documentElement.dataset.theme==="dark"?"light":"dark");
+render();
+</script>
+</body>
+</html>
