@@ -251,9 +251,6 @@ const ROLES=["p","s","m3","s1","s2","s3","s4","s5","s6"],LB={p:"P",s:"S",m3:"3M"
 const TIT=new Set(["p","s","m3"]),KEY="vo4_mesas_v3",LOCS_KEY="vo4_locs_v1",D4="VEINTISEIS DE OCTUBRE 4";
 const CARGO={"PRESIDENTE":"p","SECRETARIO":"s","TERCER MIEMBRO":"m3","1ER SUPLENTE":"s1","2DO SUPLENTE":"s2","3ER SUPLENTE":"s3","4TO SUPLENTE":"s4","5TO SUPLENTE":"s5","6TO SUPLENTE":"s6"};
 
-/* ===== Locales oficiales de VO4 (8 colegios; todos en la lista de riesgo de inundación) =====
-   c=ID local · nom=nombre · cor=corto · dir=dirección · ca=N° CA · n=1ra mesa correlativa
-   m=1ra mesa ONPE · el=electores hábiles · d="HHMM:PS3M1S2S3S4S5S6S" por mesa */
 const LOCS_DEF=[
 {c:"4173",nom:"ESCUELA DE EDUCACION SUPERIOR PEDAGOGICA PUBLICA PIURA",cor:"Pedagógica Piura",dir:"AV RAUL MATA SN AAHH SANTA ROSA",ca:"49",n:803,m:70632,el:4200,d:"0707:100001100 0828:000011001 0705:110010000 0727:010110000 0726:001011000 0650:011100000 0704:101010000 0718:110100000 0721:111000000 0648:111000000 0733:000111000 0722:011010000 0725:001100100 0624:111000000"},
 {c:"51039",nom:"IE 20463 MONSEÑOR RAMÓN ZUBIETA",cor:"Mons. Ramón Zubieta",dir:"MZ M LT 1 AAHH MANUEL SEOANE CORRALES",ca:"51",n:817,m:70657,el:4200,d:"0712:010101000 0703:110100000 0651:111000000 0720:001010100 0700:101100000 0737:010001001 0610:111000000 0709:110100000 0644:111000000 0704:101100000 0705:110001000 0706:001110000 0707:011100000 0718:111000000"},
@@ -264,43 +261,144 @@ const LOCS_DEF=[
 {c:"53742",nom:"IEP LAS PALMAS",cor:"Las Palmas",dir:"MZ D LOTE 21 URB MORONI",ca:"63",n:856,m:70777,el:2700,d:"0637:111000000 0705:110010000 0705:101001000 0658:111000000 0705:111000000 0702:101100000 0659:111000000 0622:111000000 0706:101100000"},
 {c:"53809",nom:"IE JORGE BASADRE",cor:"Jorge Basadre",dir:"AV GRAU 2980 AAHH SANTA ROSA",ca:"66",n:865,m:70807,el:6000,d:"0705:101100000 0712:010011000 0714:010100100 0710:101000001 0718:101010000 0719:101100000 0716:100100100 0641:111000000 0706:110100000 0714:110010000 0724:100011000 0726:111000000 0637:111000000 0652:111000000 0711:011000100 0653:111000000 0704:110100000 0728:001100010 0707:010011000 0643:111000000"}];
 
-/* ---- Locales mutables (persistidos) ---- */
-function loadLocs(){try{const p=JSON.parse(localStorage.getItem(LOCS_KEY));if(Array.isArray(p)&&p.length)return p.filter(l=>l.c!=="13980")}catch{}return JSON.parse(JSON.stringify(LOCS_DEF))}
-let LOCS=loadLocs();
-let LI=Object.fromEntries(LOCS.map(l=>[l.c,l]));
-const rebuildLI=()=>{LI=Object.fromEntries(LOCS.map(l=>[l.c,l]))};
-const saveLocs=()=>{try{localStorage.setItem(LOCS_KEY,JSON.stringify(LOCS))}catch{}};
+/* ================= CLOUD SYNC — Apps Script + Google Sheets ================= */
+const API_URL   = "https://script.google.com/macros/s/AKfycbySfWJiYXDJTyMH2lq5cuIwBkKaNjkrsT9ve-znDhQSGsfO_DKrAV1X9nx54cnRAk--9A/exec";
+const API_TOKEN = "vo4-2026";
+
+let DATA = [], LOCS = [], LI = {};
+let guardando = false, pendiente = false, tSave = null;
+
+const hora = () => new Date().toLocaleTimeString("es-PE",{hour:"2-digit",minute:"2-digit",second:"2-digit"});
+
+function setSync(txt, kind){
+  const el  = document.getElementById("sync");
+  const dot = document.querySelector(".sync .dot");
+  if (el)  el.textContent = txt;
+  if (dot) dot.style.background =
+    kind==="ok" ? "var(--ok)" : kind==="err" ? "var(--err)" :
+    kind==="warn" ? "var(--warn)" : "var(--muted)";
+}
+function rebuildLI(){ LI = Object.fromEntries(LOCS.map(l=>[l.c,l])); }
 
 function mesasFromDef(L){
-  const parts=(L.d||"").split(" ").filter(Boolean),out=[];
-  parts.forEach((t,i)=>{const[h,b]=t.split(":");
-    out.push({n:0,codLV:L.c,local:L.nom,dir:L.dir,ca:L.ca,mesa:String(L.m+i),hora:h.slice(0,2)+":"+h.slice(2),elector:"",obs:"",distrito:D4,miembros:{},
-      p:b[0]==="1",s:b[1]==="1",m3:b[2]==="1",s1:b[3]==="1",s2:b[4]==="1",s3:b[5]==="1",s4:b[6]==="1",s5:b[7]==="1",s6:b[8]==="1"})});
+  const parts=(L.d||"").split(" ").filter(Boolean), out=[];
+  parts.forEach((t,i)=>{
+    const [h,b]=t.split(":");
+    out.push({n:0,codLV:L.c,local:L.nom,dir:L.dir,ca:L.ca,
+      mesa:String(L.m+i),hora:h.slice(0,2)+":"+h.slice(2),
+      elector:"",obs:"",distrito:D4,miembros:{},
+      p:b[0]==="1",s:b[1]==="1",m3:b[2]==="1",s1:b[3]==="1",
+      s2:b[4]==="1",s3:b[5]==="1",s4:b[6]==="1",
+      s5:b[7]==="1",s6:b[8]==="1"});
+  });
   return out;
 }
 function demo(){
-  const a=[];let nn=0;
-  LOCS.forEach(L=>{const ms=mesasFromDef(L);ms.forEach((m,i)=>{m.n=++nn;a.push(m)})});
-  const x=a.find(m=>m.n===842);if(x)x.elector="DNI: 80339159";
+  const a=[]; let nn=0;
+  LOCS.forEach(L => mesasFromDef(L).forEach(m => { m.n = ++nn; a.push(m); }));
+  const x = a.find(m=>m.n===842); if (x) x.elector = "DNI: 80339159";
   return a;
 }
-function load(){try{const p=JSON.parse(localStorage.getItem(KEY));if(Array.isArray(p)&&p.length)return p.map(m=>({obs:"",miembros:{},distrito:D4,...m})).filter(m=>m.codLV!=="13980")}catch{}return demo()}
-let DATA=load();
-const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(DATA))}catch{}};
 
-/* Migración: si un local de la lista no tiene mesas en los datos guardados, las crea */
-function migrate(){
-  let ch=false;
-  LOCS.forEach(L=>{
-    if(DATA.some(m=>m.codLV===L.c))return;
-    const ms=mesasFromDef(L);if(!ms.length)return;
-    let base=DATA.reduce((a,x)=>Math.max(a,x.n),0);
-    ms.forEach(m=>{m.n=++base;DATA.push(m)});
-    ch=true;
-  });
-  if(ch)save();
+function apiGet(){
+  const qs = new URLSearchParams({token:API_TOKEN}).toString();
+  return fetch(API_URL + "?" + qs, {cache:"no-store"}).then(r=>r.json());
 }
-migrate();
+function apiSave(){
+  return fetch(API_URL, {
+    method:"POST",
+    headers:{"Content-Type":"text/plain;charset=utf-8"},
+    body: JSON.stringify({token:API_TOKEN, action:"saveAll", mesas:DATA, locs:LOCS})
+  }).then(r=>r.json());
+}
+
+function guardarLocal(){
+  try{
+    localStorage.setItem(KEY, JSON.stringify(DATA));
+    localStorage.setItem(LOCS_KEY, JSON.stringify(LOCS));
+  }catch(e){}
+}
+function leerLocal(){
+  let m=null, l=null;
+  try{ m=JSON.parse(localStorage.getItem(KEY)); }catch(e){}
+  try{ l=JSON.parse(localStorage.getItem(LOCS_KEY)); }catch(e){}
+  return {
+    mesas:   Array.isArray(m) ? m : null,
+    locales: (Array.isArray(l) && l.length) ? l : null
+  };
+}
+
+function save(){
+  guardarLocal();
+  pendiente = true;
+  setSync("⏳ Cambios sin guardar…", "warn");
+  clearTimeout(tSave);
+  tSave = setTimeout(pushCloud, 800);
+}
+function saveLocs(){ save(); }
+
+function pushCloud(){
+  if (guardando) return;
+  guardando = true;
+  setSync("⏫ Guardando en la nube…", "warn");
+  apiSave()
+    .then(r=>{
+      if (!r || !r.ok) throw new Error((r && r.error) || "error");
+      pendiente = false;
+      setSync("☁️ Guardado en la nube · " + hora(), "ok");
+    })
+    .catch(()=>{
+      setSync("⚠️ Sin conexión · guardado local (" + hora() + ")", "err");
+    })
+    .finally(()=>{
+      guardando = false;
+      if (pendiente){ clearTimeout(tSave); tSave = setTimeout(pushCloud, 2500); }
+    });
+}
+
+function flash(){}
+
+function aplicarDatos(mesas, locs){
+  LOCS = (Array.isArray(locs) && locs.length)
+       ? locs : JSON.parse(JSON.stringify(LOCS_DEF));
+  rebuildLI();
+  DATA = (Array.isArray(mesas) && mesas.length)
+       ? mesas.map(m => ({obs:"", miembros:{}, distrito:D4, ...m}))
+       : demo();
+  let ch = false;
+  LOCS.forEach(L=>{
+    if (DATA.some(m => m.codLV === L.c)) return;
+    const ms = mesasFromDef(L); if (!ms.length) return;
+    let base = DATA.reduce((a,x)=>Math.max(a,x.n),0);
+    ms.forEach(m => { m.n = ++base; DATA.push(m); });
+    ch = true;
+  });
+  if (ch) save();
+}
+
+async function boot(){
+  setSync("⏳ Conectando con la nube…", "warn");
+  let cloud = null;
+  try { cloud = await apiGet(); } catch(e){ cloud = null; }
+
+  if (cloud && cloud.ok){
+    aplicarDatos(cloud.mesas, cloud.locs);
+    if (Array.isArray(cloud.mesas) && cloud.mesas.length){
+      setSync("☁️ Datos de la nube · " +
+        (cloud.ts ? new Date(cloud.ts).toLocaleString("es-PE") : hora()), "ok");
+    } else {
+      setSync("📤 Subiendo datos iniciales…", "warn");
+      pendiente = true;
+      pushCloud();
+    }
+  } else {
+    const loc = leerLocal();
+    aplicarDatos(loc.mesas, loc.locales);
+    setSync("⚠️ Sin conexión · usando copia local · " + hora(), "err");
+  }
+  render();
+}
+/* ================= FIN CLOUD SYNC ================= */
 
 const S={q:"",local:"todos",chip:"todas",orden:"mesa",view:"table",sel:new Set(),tr:new Set()};
 const $=id=>document.getElementById(id),esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -308,7 +406,6 @@ const st=m=>m.p&&m.s&&m.m3?"ok":(!m.p&&!m.s&&!m.m3?"none":"part"),STL={ok:"Compl
 const hasMem=m=>ROLES.some(r=>m.miembros?.[r]?.nombre),fmt=n=>n.toLocaleString("es-PE");
 const late=m=>m.hora&&m.hora>"07:30";
 let tt;function toast(t){const e=$("toast");e.textContent=t;e.classList.add("show");clearTimeout(tt);tt=setTimeout(()=>e.classList.remove("show"),2300)}
-function flash(){$("sync").textContent="Guardado · "+new Date().toLocaleTimeString("es-PE",{hour:"2-digit",minute:"2-digit"})}
 
 const CHIPS=[["todas","Todas"],["ok","✅ Completas"],["part","🟡 Parciales"],["none","🔴 Sin titulares"],["obs","⚠️ Con observación"],["late","⏰ Instaladas tarde"],["mem","👥 Con miembros ONPE"],["elec","👤 Con elector"]];
 function pasa(m){
@@ -332,7 +429,6 @@ function renderTop(){
   <div class="kpi"><div class="l">⚠️ Observaciones</div><div class="v ${obs?"c-warn":""}">${obs}</div><div class="s">${lt} instaladas después 07:30</div></div>
   <div class="kpi"><div class="l">👥 Con miembros ONPE</div><div class="v c-acc">${mem}</div><div class="s">${t?Math.round(mem*100/t):0}% de las mesas</div></div>
   <div class="kpi"><div class="l">🌊 Electores en riesgo</div><div class="v c-risk">${fmt(elec)}</div><div class="s">${LOCS.length} locales</div></div>`;
-  /* alerta dinámica */
   $("aLoc").textContent=LOCS.length;$("aMes").textContent=t;$("aEl").textContent=fmt(elec);
   const g={};DATA.forEach(m=>{(g[m.codLV]??=[]).push(m)});
   $("locs").innerHTML=Object.entries(g).map(([c,a])=>{const o=a.filter(m=>st(m)==="ok").length,n=a.filter(m=>st(m)==="none").length,pp=a.length-o-n,i=LI[c];
@@ -378,11 +474,10 @@ function selUI(){
   $("bN").textContent=n;$("bulk").classList.toggle("show",n>0);document.body.classList.toggle("bulk",n>0);
   $("bMark").disabled=$("bUn").disabled=!(n&&S.tr.size)}
 
-/* acciones */
 function toggleCell(n,r){const m=DATA.find(x=>x.n===+n);if(!m)return;m[r]=!m[r];
   document.querySelectorAll(`td.rl[data-n="${n}"][data-r="${r}"]`).forEach(c=>c.classList.toggle("on",m[r]));
   const tr=document.querySelector(`tr[data-n="${n}"]`);if(tr){tr.className=tr.className.replace(/\b(ok|part|none)\b/,st(m));const p=tr.querySelector(".pill");p.className="pill "+st(m);p.textContent=STL[st(m)]}
-  save();flash();renderTop()}
+  save();renderTop()}
 function toggleSel(n){n=+n;S.sel.has(n)?S.sel.delete(n):S.sel.add(n);
   document.querySelectorAll(`tr[data-n="${n}"],.card[data-n="${n}"]`).forEach(e=>{e.classList.toggle("sel",S.sel.has(n));const c=e.querySelector(".rk");if(c)c.checked=S.sel.has(n)});selUI()}
 
@@ -407,7 +502,7 @@ $("form").addEventListener("submit",e=>{e.preventDefault();const f=e.target,fd=n
   ROLES.forEach(r=>d[r]=fd.get(r)==="on");
   if(DATA.some(m=>m.n===d.n&&m.n!==o))return toast("❌ Ya existe el N° "+d.n);
   if(o){const i=DATA.findIndex(m=>m.n===o);d.miembros=DATA[i].miembros;DATA[i]=d;S.sel.delete(o)}else{d.miembros={};DATA.push(d)}
-  save();flash();$("mBg").hidden=true;toast("✅ Guardado");render()});
+  save();$("mBg").hidden=true;toast("✅ Guardado");render()});
 
 function verMiembros(n){const m=DATA.find(x=>x.n===+n);if(!m)return;
   $("vTitle").innerHTML=`👥 Mesa #${esc(m.mesa)} <small style="font-weight:400;color:var(--muted)">· ${esc(m.local)}</small>`;
@@ -420,7 +515,6 @@ function resumen(){const t=DATA.length,ok=DATA.filter(m=>st(m)==="ok").length,no
   Object.entries(g).forEach(([c,a])=>{s+=`• ${LI[c]?.cor||a[0].local}: ${a.filter(m=>st(m)==="ok").length}/${a.length}\n`});
   const ob=DATA.filter(m=>m.obs);if(ob.length)s+=`\n⚠️ Observaciones:\n`+ob.map(m=>`Mesa ${m.mesa}: ${m.obs}`).join("\n");return s}
 
-/* importar */
 function parseLine(l){const s=l.includes("\t")?"\t":(l.split(";").length>l.split(",").length?";":",");return l.split(s).map(x=>x.trim())}
 function importar(){const txt=$("iText").value.trim();if(!txt)return toast("❌ Pega los datos primero");
   const lines=txt.split(/\r?\n/).filter(x=>x.trim()),ix={mesa:0,dist:3,cargo:12,nom:13,dni:14};
@@ -437,7 +531,6 @@ function importar(){const txt=$("iText").value.trim();if(!txt)return toast("❌ 
   save();render();const e=$("iRes");e.hidden=false;
   e.innerHTML=`✅ <b>${ok}</b> miembros cargados${ign?` · ${ign} ignorados`:""}${sc?` · ${sc} sin cargo válido`:""}${nf.size?`<br><small>${nf.size} mesas fuera de tu zona (${[...nf].slice(0,5).join(", ")}${nf.size>5?"…":""})</small>`:""}`;toast("✅ Importación lista")}
 
-/* ===== Locales: administración ===== */
 function renderLocsModal(){
   const g={};DATA.forEach(m=>{(g[m.codLV]??=[]).push(m)});
   $("lList").innerHTML=`<div style="max-height:280px;overflow:auto"><table class="mt2"><thead><tr><th>ID Local</th><th>Nombre</th><th class="c">Mesas</th><th class="c">Electores</th><th class="c"></th></tr></thead><tbody>`+
@@ -460,7 +553,7 @@ $("lList").addEventListener("click",e=>{
   if(dl){const c=dl.dataset.ld,L=LI[c],cnt=DATA.filter(m=>m.codLV===c).length;
     if(!confirm(`¿Eliminar el local ${L.cor||L.nom} y sus ${cnt} mesas?`))return;
     LOCS=LOCS.filter(x=>x.c!==c);DATA=DATA.filter(m=>m.codLV!==c);
-    rebuildLI();saveLocs();save();render();renderLocsModal();toast("🗑️ Local eliminado")}
+    rebuildLI();saveLocs();render();renderLocsModal();toast("🗑️ Local eliminado")}
 });
 $("lForm").addEventListener("submit",e=>{
   e.preventDefault();const f=e.target,fd=new FormData(f),o=fd.get("origC")||"";
@@ -483,12 +576,11 @@ $("lForm").addEventListener("submit",e=>{
   }
   const old=LOCS.find(x=>x.c===o);
   if(old)Object.assign(old,L);else LOCS.push(L);
-  rebuildLI();saveLocs();save();f.reset();f.origC.value="";
+  rebuildLI();saveLocs();f.reset();f.origC.value="";
   render();renderLocsModal();toast("✅ Local guardado");
 });
 $("lReset").onclick=()=>{const f=$("lForm");setTimeout(()=>{f.origC.value=""},0)};
 
-/* eventos */
 $("tb").addEventListener("click",e=>{const c=e.target.closest(".rl");if(c)return toggleCell(c.dataset.n,c.dataset.r);
   const o=e.target.closest(".ob");if(o)return openEdit(DATA.find(m=>m.n===+o.dataset.n),true);
   if(e.target.matches(".rk"))return toggleSel(e.target.closest("tr").dataset.n);
@@ -506,7 +598,7 @@ $("selAll").onchange=e=>{e.target.checked?vis().forEach(m=>S.sel.add(m.n)):S.sel
 $("selClr").onclick=()=>{S.sel.clear();render()};
 $("bChips").innerHTML=ROLES.map(r=>`<button class="rc" data-r="${r}">${LB[r]}</button>`).join("");
 $("bChips").onclick=e=>{const c=e.target.closest(".rc");if(!c)return;S.tr.has(c.dataset.r)?S.tr.delete(c.dataset.r):S.tr.add(c.dataset.r);c.classList.toggle("on");selUI()};
-function lote(v){DATA.forEach(m=>{if(S.sel.has(m.n))S.tr.forEach(r=>m[r]=v)});save();flash();toast(`✅ ${v?"Marcadas":"Desmarcadas"} ${S.sel.size} mesas`);render()}
+function lote(v){DATA.forEach(m=>{if(S.sel.has(m.n))S.tr.forEach(r=>m[r]=v)});save();toast(`✅ ${v?"Marcadas":"Desmarcadas"} ${S.sel.size} mesas`);render()}
 $("bMark").onclick=()=>lote(true);$("bUn").onclick=()=>lote(false);
 $("bCancel").onclick=()=>{S.sel.clear();S.tr.clear();document.querySelectorAll(".rc").forEach(c=>c.classList.remove("on"));render()};
 $("addBtn").onclick=()=>openEdit(null);
@@ -516,13 +608,15 @@ $("copyBtn").onclick=async()=>{try{await navigator.clipboard.writeText(resumen()
 document.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>$(b.dataset.close).hidden=true);
 document.querySelectorAll(".mbg").forEach(b=>b.addEventListener("click",e=>{if(e.target===b)b.hidden=true}));
 $("resetBtn").onclick=()=>{if(!confirm("¿Borrar los cambios y volver a los locales y mesas originales?"))return;
-  LOCS=JSON.parse(JSON.stringify(LOCS_DEF));rebuildLI();saveLocs();DATA=demo();S.sel.clear();save();render();toast("🔄 Datos restaurados")};
+  LOCS=JSON.parse(JSON.stringify(LOCS_DEF));rebuildLI();DATA=demo();S.sel.clear();save();render();toast("🔄 Datos restaurados")};
 document.addEventListener("keydown",e=>{if(e.key==="Escape"){document.querySelectorAll(".mbg").forEach(b=>b.hidden=true);if(S.sel.size){S.sel.clear();render()}}
   if(e.key==="/"&&!/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)){e.preventDefault();$("q").focus()}});
 function tema(t){document.documentElement.dataset.theme=t;$("themeBtn").textContent=t==="dark"?"☀️":"🌙";try{localStorage.setItem("tema",t)}catch{}}
 {let g=null;try{g=localStorage.getItem("tema")}catch{}tema(g||(matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light"))}
 $("themeBtn").onclick=()=>tema(document.documentElement.dataset.theme==="dark"?"light":"dark");
+
 render();
+boot();
 </script>
 </body>
 </html>
